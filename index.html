@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapWest Image Generator v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+    <style>
+        /* Custom scrollbar for sidebar */
+        aside::-webkit-scrollbar {
+            width: 4px;
+        }
+        aside::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+            border-radius: 4px;
+        }
+        /* Loading Spinner Animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col h-full shadow-xl z-20 overflow-y-auto">
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">SnapWest AI</h1>
+            <p class="text-xs text-slate-400 mt-1">Creative Studio v3.0</p>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2">
+            <button id="nav-model" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-female w-5 text-center"></i>
+                <span>Photo Model</span>
+            </button>
+            
+            <button id="nav-lightroom" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-sliders-h w-5 text-center"></i>
+                <span>Photo Lightroom</span>
+            </button>
+
+            <button id="nav-pasphoto" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-id-card w-5 text-center"></i>
+                <span>Pas Photo</span>
+            </button>
+
+            <button id="nav-travel" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-plane-departure w-5 text-center"></i>
+                <span>Jalan-Jalan Virtual</span>
+            </button>
+
+            <button id="nav-prewedding" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-heart w-5 text-center"></i>
+                <span>Photo Prewedding</span>
+            </button>
+
+            <button id="nav-restoration" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-magic w-5 text-center"></i>
+                <span>Restorasi Foto</span>
+            </button>
+
+            <button id="nav-places" class="w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 hover:bg-slate-800 transition-colors text-slate-300">
+                <i class="fas fa-map-marked-alt w-5 text-center"></i>
+                <span>Foto Tempat</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 text-xs text-center text-slate-500">
+            &copy; 2025 SnapWest Studio
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 h-full overflow-y-auto bg-slate-100 p-4 md:p-8 relative">
+        
+        <!-- ==================== MODEL GENERATOR PAGE ==================== -->
+        <div id="model-generator-page" class="max-w-5xl mx-auto space-y-6">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Model AI Generator</h2>
+                <p class="text-slate-500">Buat foto model profesional dengan berbagai gaya dan pakaian.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Form Section -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="model-form" class="space-y-5">
+                        <!-- Upload -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto Wajah</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="model-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-indigo-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                                <p class="text-xs text-slate-400 mt-1">Format JPG/PNG</p>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Kategori Pakaian</label>
+                                <select id="model-clothing" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="casual">Casual (Modern)</option>
+                                    <option value="formal">Formal / Kantor</option>
+                                    <option value="sport">Olahraga</option>
+                                    <option value="glamour">Glamour / Pesta</option>
+                                    <option value="streetwear">Streetwear</option>
+                                    <option value="traditional">Tradisional Indonesia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Tipe Foto</label>
+                                <select id="model-photo-type" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="Portrait photography, soft lighting">Portrait Studio</option>
+                                    <option value="Cinematic lighting, dramatic mood">Cinematic</option>
+                                    <option value="Model Fashion">Model Fashion</option>
+                                    <option value="Outdoor natural light">Outdoor Natural</option>
+                                    <option value="Black and white artistic">Black & White</option>
+                                    <option value="Elegant boudoir photography">Boudoir</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Rasio Aspek</label>
+                                <select id="model-aspect-ratio" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1:1">1:1 (Persegi)</option>
+                                    <option value="3:4">3:4 (Portrait)</option>
+                                    <option value="9:16">9:16 (Story)</option>
+                                    <option value="16:9">16:9 (Landscape)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Jumlah</label>
+                                <select id="model-count" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1">1 Gambar</option>
+                                    <option value="2">2 Gambar</option>
+                                    <option value="4">4 Gambar</option>
+                                    <option value="6">6 Gambar</option>
+                                    <option value="10">10 Gambar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-indigo-200 transform active:scale-95 flex justify-center items-center gap-2">
+                            <i class="fas fa-magic"></i> Generate Model
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result Area -->
+                <div id="model-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="model-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil foto akan muncul di sini</p>
+                    </div>
+                    <div id="model-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-indigo-600 font-medium animate-pulse">Sedang memproses...</p>
+                    </div>
+                    <div id="model-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== LIGHTROOM GENERATOR PAGE ==================== -->
+        <div id="lightroom-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Photo Lightroom Editor</h2>
+                <p class="text-slate-500">Edit tone dan warna foto secara instan dengan AI.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Form -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="lightroom-form" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="lightroom-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-pink-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Preset</label>
+                                <select id="lightroom-preset" class="w-full p-2 border border-slate-300 rounded-md">
+                                    <option value="portrait">Portrait (Halus)</option>
+                                    <option value="natural">Natural</option>
+                                    <option value="bnw">Black & White</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Temperature</label>
+                                <select id="lightroom-temp" class="w-full p-2 border border-slate-300 rounded-md">
+                                    <option value="warm">Warm (Hangat)</option>
+                                    <option value="cold">Cold (Dingin)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Rasio Aspek</label>
+                                <select id="lightroom-aspect-ratio" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1:1">1:1</option>
+                                    <option value="3:4">3:4</option>
+                                    <option value="16:9">16:9</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Jumlah</label>
+                                <select id="lightroom-count" class="w-full p-2 border border-slate-300 rounded-md">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-pink-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-sliders-h"></i> Terapkan Preset
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="lightroom-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="lightroom-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil edit akan muncul di sini</p>
+                    </div>
+                    <div id="lightroom-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-pink-600 font-medium animate-pulse">Sedang mengedit...</p>
+                    </div>
+                    <div id="lightroom-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================== PAS PHOTO GENERATOR PAGE ==================== -->
+        <div id="pasphoto-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Pas Photo Generator</h2>
+                <p class="text-slate-500">Buat pas foto formal dengan latar belakang warna custom.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="pasphoto-form" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Selfie</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="pasphoto-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-id-badge text-3xl text-blue-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Warna Background</label>
+                                <select id="pasphoto-bg" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="Red background">Merah</option>
+                                    <option value="Blue background">Biru</option>
+                                    <option value="White background">Putih</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Pakaian</label>
+                                <select id="pasphoto-shirt" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="White formal shirt">Kemeja Putih</option>
+                                    <option value="Black suit and tie">Jas Hitam & Dasi</option>
+                                    <option value="Batik shirt">Batik</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-camera"></i> Buat Pas Photo
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="pasphoto-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="pasphoto-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil pas photo akan muncul di sini</p>
+                    </div>
+                    <div id="pasphoto-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-blue-600 font-medium animate-pulse">Sedang memproses...</p>
+                    </div>
+                    <div id="pasphoto-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TRAVEL GENERATOR PAGE ==================== -->
+        <div id="travel-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Jalan-Jalan Virtual</h2>
+                <p class="text-slate-500">Tempatkan diri Anda di lokasi wisata impian di seluruh dunia.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="travel-form" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="travel-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-map-marked-alt text-3xl text-green-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Destinasi Tujuan</label>
+                            <input type="text" id="travel-destination" placeholder="Contoh: Eiffel Tower Paris, Bali Beach, Tokyo Shibuya" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Musim/Cuaca</label>
+                                <select id="travel-season" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="auto">Otomatis (Sesuai Destinasi)</option>
+                                    <option value="Sunny day">Cerah</option>
+                                    <option value="Sunset">Sunset</option>
+                                    <option value="Snowy winter">Musim Salju</option>
+                                    <option value="Autumn leaves">Musim Gugur</option>
+                                    <option value="Night city lights">Malam Hari</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Aktivitas</label>
+                                <select id="travel-activity" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="Standing posing for photo">Berdiri Santai</option>
+                                    <option value="Walking candidly">Berjalan Candid</option>
+                                    <option value="Sitting and enjoying view">Duduk Santai</option>
+                                    <option value="Eating local food">Makan Kuliner</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Deskripsi Foto (Grup)</label>
+                            <select id="travel-group-type" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                <option value="auto">Otomatis (Sesuai Upload)</option>
+                                <option value="couple">Pasangan</option>
+                                <option value="family">Keluarga</option>
+                                <option value="friends">Teman</option>
+                            </select>
+                        </div>
+
+                         <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Rasio Aspek</label>
+                                <select id="travel-aspect-ratio" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1:1">1:1 (Persegi)</option>
+                                    <option value="3:4">3:4 (Portrait)</option>
+                                    <option value="9:16">9:16 (Story)</option>
+                                    <option value="16:9">16:9 (Landscape)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Jumlah</label>
+                                <select id="travel-count" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                    <option value="6">6</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-green-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-plane"></i> Berangkat!
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="travel-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="travel-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil foto liburan akan muncul di sini</p>
+                    </div>
+                    <div id="travel-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-green-600 font-medium animate-pulse">Sedang traveling...</p>
+                    </div>
+                    <div id="travel-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PREWEDDING GENERATOR PAGE ==================== -->
+        <div id="prewedding-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Photo Prewedding AI</h2>
+                <p class="text-slate-500">Buat foto prewedding romantis tanpa perlu sewa studio mahal.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="prewedding-form" class="space-y-5">
+                         <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto Pasangan</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="prewedding-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-heart text-3xl text-rose-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Tema</label>
+                                <select id="prewedding-theme" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="Rustic nature outdoor">Rustic Alam</option>
+                                    <option value="Elegant indoor classic">Indoor Elegan</option>
+                                    <option value="Casual fun date">Casual Date</option>
+                                    <option value="Traditional javanese wedding">Adat Jawa</option>
+                                    <option value="Korean minimal studio">Korean Style</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Warna Baju</label>
+                                <select id="prewedding-color" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="White">Putih</option>
+                                    <option value="Black">Hitam</option>
+                                    <option value="Sage Green">Sage Green</option>
+                                    <option value="Navy Blue">Navy</option>
+                                    <option value="Maroon">Maroon</option>
+                                    <option value="Pastel Pink">Pastel Pink</option>
+                                </select>
+                            </div>
+                        </div>
+
+                         <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Rasio Aspek</label>
+                                <select id="prewedding-aspect-ratio" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1:1">1:1 (Persegi)</option>
+                                    <option value="3:4">3:4 (Portrait)</option>
+                                    <option value="9:16">9:16 (Story)</option>
+                                    <option value="16:9">16:9 (Landscape)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Jumlah</label>
+                                <select id="prewedding-count" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                    <option value="6">6</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-rose-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-heart"></i> Buat Prewedding
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="prewedding-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                     <div id="prewedding-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil foto romantis akan muncul di sini</p>
+                    </div>
+                    <div id="prewedding-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-rose-600 font-medium animate-pulse">Sedang memproses...</p>
+                    </div>
+                    <div id="prewedding-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== RESTORATION GENERATOR PAGE ==================== -->
+        <div id="restoration-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Restorasi Foto Lama</h2>
+                <p class="text-slate-500">Perbaiki foto buram, rusak, atau hitam putih menjadi jernih dan berwarna.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="restoration-form" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto Lama</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="restoration-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-history text-3xl text-amber-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik untuk upload foto</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Jenis Perbaikan</label>
+                            <select id="restoration-type" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                <option value="restoration">Pertajam & Perjelas (Upscale)</option>
+                                <option value="colorize">Warnai Foto Hitam Putih</option>
+                                <option value="repair">Perbaiki Kerusakan/Robek</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-amber-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-wand-magic-sparkles"></i> Restorasi Sekarang
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="restoration-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="restoration-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil restorasi akan muncul di sini</p>
+                    </div>
+                    <div id="restoration-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-amber-600 font-medium animate-pulse">Sedang memperbaiki...</p>
+                    </div>
+                    <div id="restoration-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PLACES GENERATOR PAGE (FOTO TEMPAT) ==================== -->
+        <div id="places-generator-page" class="max-w-5xl mx-auto space-y-6 hidden">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Foto Tempat (Grup)</h2>
+                <p class="text-slate-500">Buat foto grup/selfie di lokasi pilihan dengan teman atau keluarga.</p>
+            </header>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Form -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                    <form id="places-form" class="space-y-5">
+                        
+                        <!-- Upload Orang -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-slate-700">Upload Foto Orang (Max 5)</label>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                <input type="file" id="places-people-upload" accept="image/*" multiple max="5" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <i class="fas fa-users text-3xl text-teal-500 mb-2"></i>
+                                <p class="text-sm text-slate-500 font-medium">Klik upload foto wajah (bisa banyak)</p>
+                            </div>
+                        </div>
+
+                        <!-- Lokasi -->
+                        <div class="p-4 bg-slate-50 rounded-lg space-y-4 border border-slate-200">
+                            <h3 class="font-medium text-slate-700 border-b pb-2">Kustomisasi Tempat</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Nama Tempat</label>
+                                <input type="text" id="places-location-name" placeholder="Contoh: Raja Ampat, Times Square, Cafe" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Upload Foto Lokasi (Referensi)</label>
+                                <input type="file" id="places-location-upload" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                            </div>
+                        </div>
+
+                        <!-- Pakaian & Warna -->
+                        <div class="p-4 bg-slate-50 rounded-lg space-y-4 border border-slate-200">
+                            <h3 class="font-medium text-slate-700 border-b pb-2">Kustomisasi Penampilan</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Pakaian</label>
+                                    <select id="places-clothing-type" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                        <option value="sport">Olahraga / Jogging</option>
+                                        <option value="casual">Casual Santai</option>
+                                        <option value="formal">Resmi / Formal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-600 mb-1">Warna Pakaian</label>
+                                    <select id="places-clothing-color" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                        <option value="White">Putih</option>
+                                        <option value="Black">Hitam</option>
+                                        <option value="Red">Merah</option>
+                                        <option value="Blue">Biru</option>
+                                        <option value="Yellow">Kuning</option>
+                                        <option value="Colorful">Warna-warni</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Pose Selfie -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Pose Selfie</label>
+                                <select id="places-pose" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="half body">Setengah Badan (Half Body)</option>
+                                    <option value="full body">Full Body</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Rasio Aspek</label>
+                                <select id="places-aspect-ratio" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1:1">1:1</option>
+                                    <option value="3:4">3:4</option>
+                                    <option value="16:9">16:9</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Jumlah</label>
+                                <select id="places-count" class="w-full p-2 border border-slate-300 rounded-md bg-white">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-teal-200 flex justify-center items-center gap-2">
+                            <i class="fas fa-camera-retro"></i> Ambil Foto Selfie
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result -->
+                <div id="places-result" class="bg-slate-200 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center min-h-[400px] p-4 relative">
+                    <div id="places-placeholder" class="text-center text-slate-400">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Hasil foto grup akan muncul di sini</p>
+                    </div>
+                    <div id="places-loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <div class="spinner mb-4"></div>
+                        <p class="text-teal-600 font-medium animate-pulse">Sedang memproses...</p>
+                    </div>
+                    <div id="places-output-grid" class="grid w-full gap-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
